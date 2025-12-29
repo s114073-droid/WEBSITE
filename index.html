@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>卡通角色吃豆人遊戲</title>
+<style>
+    body {
+        background:#000;
+        color:#fff;
+        text-align:center;
+        font-family:Arial, sans-serif;
+    }
+    canvas {
+        background:#000;
+        display:block;
+        margin:10px auto;
+    }
+    select {
+        font-size:16px;
+        padding:4px;
+    }
+</style>
+</head>
+<body>
+
+<h2>🎮 吃豆人（可選 Dora / Diego / Boots）</h2>
+
+角色選擇：
+<select id="skin">
+    <option value="pacman">Pac-Man</option>
+    <option value="dora">Dora</option>
+    <option value="diego">Diego</option>
+    <option value="boots">Boots</option>
+</select>
+
+<canvas id="game" width="448" height="496"></canvas>
+
+<script>
+/* ===== 基本設定 ===== */
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+const tileSize = 32;
+
+/* ===== 地圖 (0=路,1=牆,2=豆子) ===== */
+const map = [
+[1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+[1,2,2,2,2,2,2,1,2,2,2,2,2,1],
+[1,2,1,1,1,2,2,1,2,1,1,1,2,1],
+[1,2,2,2,1,2,2,2,2,2,2,1,2,1],
+[1,1,1,2,1,1,1,1,1,1,2,1,2,1],
+[1,2,2,2,2,2,2,1,2,2,2,2,2,1],
+[1,2,1,1,1,2,2,1,2,1,1,1,2,1],
+[1,2,2,2,2,2,2,2,2,2,2,2,2,1],
+[1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+];
+
+/* ===== 玩家 ===== */
+const player = {
+    x: 1,
+    y: 1,
+    dirX: 0,
+    dirY: 0,
+    speed: 0.08,
+    angle: 0
+};
+
+/* ===== 控制 ===== */
+document.addEventListener("keydown", e=>{
+    if(e.key==="ArrowUp")    setDir(0,-1);
+    if(e.key==="ArrowDown")  setDir(0,1);
+    if(e.key==="ArrowLeft")  setDir(-1,0);
+    if(e.key==="ArrowRight") setDir(1,0);
+});
+
+function setDir(dx,dy){
+    const nx = Math.floor(player.x + dx);
+    const ny = Math.floor(player.y + dy);
+    if(map[ny][nx] !== 1){
+        player.dirX = dx;
+        player.dirY = dy;
+    }
+}
+
+/* ===== 繪圖 ===== */
+function drawMap(){
+    for(let y=0;y<map.length;y++){
+        for(let x=0;x<map[y].length;x++){
+            if(map[y][x]===1){
+                ctx.fillStyle="#0033ff";
+                ctx.fillRect(x*tileSize,y*tileSize,tileSize,tileSize);
+            }
+            if(map[y][x]===2){
+                ctx.fillStyle="#fff";
+                ctx.beginPath();
+                ctx.arc(x*tileSize+16,y*tileSize+16,4,0,Math.PI*2);
+                ctx.fill();
+            }
+        }
+    }
+}
+
+function drawCharacter(){
+    const px = player.x*tileSize+16;
+    const py = player.y*tileSize+16;
+    const skin = document.getElementById("skin").value;
+
+    ctx.save();
+    ctx.translate(px,py);
+
+    if(skin==="pacman"){
+        ctx.fillStyle="yellow";
+        ctx.beginPath();
+        ctx.moveTo(0,0);
+        ctx.arc(0,0,14,player.angle,Math.PI*2-player.angle);
+        ctx.fill();
+        player.angle = player.angle>0 ? 0 : 0.4;
+    }
+
+    if(skin==="dora"){
+        ctx.fillStyle="#ffb6c1";
+        ctx.beginPath();
+        ctx.arc(0,0,14,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle="#000";
+        ctx.fillRect(-6,-4,4,4);
+        ctx.fillRect(2,-4,4,4);
+    }
+
+    if(skin==="diego"){
+        ctx.fillStyle="#f4a460";
+        ctx.beginPath();
+        ctx.arc(0,0,14,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle="#000";
+        ctx.fillRect(-5,-4,4,4);
+        ctx.fillRect(1,-4,4,4);
+    }
+
+    if(skin==="boots"){
+        ctx.fillStyle="#9370db";
+        ctx.beginPath();
+        ctx.arc(0,0,14,0,Math.PI*2);
+        ctx.fill();
+        ctx.fillStyle="#fff";
+        ctx.beginPath();
+        ctx.arc(-4,-4,3,0,Math.PI*2);
+        ctx.arc(4,-4,3,0,Math.PI*2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+/* ===== 更新 ===== */
+function update(){
+    const nx = player.x + player.dirX*player.speed;
+    const ny = player.y + player.dirY*player.speed;
+
+    if(map[Math.floor(ny)][Math.floor(nx)] !== 1){
+        player.x = nx;
+        player.y = ny;
+    }
+
+    const gx = Math.floor(player.x);
+    const gy = Math.floor(player.y);
+    if(map[gy][gx] === 2){
+        map[gy][gx] = 0;
+    }
+}
+
+/* ===== 主迴圈 ===== */
+function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawMap();
+    update();
+    drawCharacter();
+    requestAnimationFrame(loop);
+}
+loop();
+</script>
+
+<p>⬅️⬆️⬇️➡️ 使用方向鍵操作</p>
+
+</body>
+</html>
